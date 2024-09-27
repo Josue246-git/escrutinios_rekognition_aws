@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.658.1",
+    "aws-sdk": "^2.1691.0"
+  }
+}
