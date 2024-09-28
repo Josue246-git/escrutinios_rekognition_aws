@@ -1,5 +1,5 @@
-// AWS SDK v3
 const { RekognitionClient, DetectTextCommand } = require("@aws-sdk/client-rekognition");
+const fs = require('fs'); // Módulo para manipular archivos
 
 // Inicializar el cliente de Rekognition con el SDK v3
 const client = new RekognitionClient({ region: 'us-west-2' });
@@ -14,90 +14,38 @@ const params = {
     }
 };
 
-// Función de detección de texto
-const detectText = async () => {
+// Función principal para ejecutar el comando DetectText
+async function detectText() {
     try {
+        // Usar el comando DetectTextCommand
         const command = new DetectTextCommand(params);
-        const data = await client.send(command);
+        const response = await client.send(command);
 
-        const detections = data.TextDetections;
+        // Procesa los bloques de texto detectados
+        const detectedText = response.TextDetections;
 
-        // Almacenar datos extraídos
-        let extractedData = {
-            titulo: '',
-            fecha: '',
-            asunto: '',
-            circunscripcion: '',
-            numeroActa: '',
-            control: '',
-            firmas: 'Imágenes extraídas',
-            codigoBarras: 'Imágenes extraídas',
-            partidos: []
-        };
+        // Inicializar variable para almacenar la salida
+        let output = "===== Todos los textos detectados =====\n";
 
-        // Almacenar bloques relacionados por cercanía
-        let partidosTemp = [];
-        let currentParty = {};
-
-        detections.forEach(item => {
-            const detectedText = item.DetectedText.toUpperCase();
-
-            // Detectar el título
-            if (detectedText.includes("ELECCIONES SECCIONALES Y CPCCS")) {
-                extractedData.titulo = detectedText;
-            }
-
-            // Detectar la fecha
-            if (detectedText.match(/\d{1,2} DE \w+ DE \d{4}/)) {
-                extractedData.fecha = detectedText;
-            }
-
-            // Detectar el asunto
-            if (detectedText.includes("VOCALES DE JUNTA PARROQUIAL RURAL")) {
-                extractedData.asunto = detectedText;
-            }
-
-            // Detectar la circunscripción
-            if (detectedText.includes("CIRCUNSCRIPCIÓN")) {
-                extractedData.circunscripcion = detectedText;
-            }
-
-            // Detectar número de acta y control
-            if (detectedText.includes("ACTA N")) {
-                extractedData.numeroActa = detectedText;
-            }
-            if (detectedText.includes("CONTROL N")) {
-                extractedData.control = detectedText;
-            }
-
-            // Filtrar por posibles números de lista y votos (esto dependerá del formato exacto del acta)
-            if (detectedText.match(/^\d{1,3}$/)) {
-                // Posible número de lista (por ejemplo, 001, 002, etc.)
-                currentParty.lista = detectedText;
-            } else if (detectedText.match(/^\d+$/)) {
-                // Posible número de votos (si son solo dígitos)
-                currentParty.votos = detectedText;
-
-                // Guardar el partido actual en la lista
-                if (currentParty.lista && currentParty.votos) {
-                    partidosTemp.push({ lista: currentParty.lista, votos: currentParty.votos });
-                    currentParty = {};  // Reiniciar para el siguiente partido
-                }
-            } else if (detectedText.length > 3 && detectedText.length < 40) {
-                // Posible nombre de partido (filtrar texto relevante entre 3 y 40 caracteres)
-                currentParty.nombre = detectedText;
-            }
+        detectedText.forEach(text => {
+            output += `Texto: ${text.DetectedText}\n`;
+            output += `Tipo: ${text.Type}\n`; // LINE o WORD
+            output += `Confianza: ${text.Confidence}\n`; // Confianza de la detección
+            output += `Coordenadas: ${JSON.stringify(text.Geometry.BoundingBox)}\n`; // Coordenadas del bloque de texto en la imagen
+            output += "----------------------------------------\n";
         });
 
-        // Asignar los partidos al resultado final
-        extractedData.partidos = partidosTemp;
+        output += "========================================\n";
 
-        console.log("Datos extraídos:", extractedData);
+        // Escribir la salida en un archivo txt
+        fs.writeFileSync('resultado_rekognition.txt', output);
 
-    } catch (error) {
-        console.error("Error detecting text:", error);
+        console.log("Texto detectado guardado en 'resultado_rekognition.txt'");
+
+    } catch (err) {
+        console.error("Error detectando el texto:", err);
     }
-};
+}
 
-// Llamar a la función
+// Ejecutar la función
 detectText();
