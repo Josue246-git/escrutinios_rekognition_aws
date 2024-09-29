@@ -3,3 +3,19 @@ body
     margin: 2rem;
     padding: 0;
 } 
+
+.camera
+{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    align-items: center;
+    justify-content: center;
+
+}	

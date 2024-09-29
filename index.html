@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
@@ -11,21 +10,24 @@
     <link rel="stylesheet" href="styles.css">
     <title>Reconocimiento de Actas de Escrutinio</title>
 </head>
-
-<body>
+<body> 
     <div class="container indicaciones">
         <h5>Pasos para procesar acta de escrutinio</h5>
         <ol>
             <li>Ingresar el número de acta.</li>
             <li>Subir el archivo del acta en formato (jpg o png), o tomar una fotografía.</li>
-            <ul><li>La fotografía debe ser clara, legible y que se pueda observar todos los datos relevantes.</li></ul>
-            <ul><li>De otra manera deberá volver a tomar la fotografía hasta que se cumpla el punto anterior.</li></ul>
+            <ul>
+                <li>La fotografía debe ser clara, legible y que se puedan observar todos los datos relevantes.</li>
+            </ul>
+            <ul>
+                <li>De otra manera deberá volver a tomar la fotografía hasta que se cumpla el punto anterior.</li>
+            </ul>
             <li>Dar clic en "Procesar Acta" para extraer los datos.</li>
         </ol>
     </div>
     <br>
-    <!-- Sección de carga de acta -->
-    <div class="container Procesamiento">
+
+    <div class="container Procesamiento"> 
         <div id="seccion6" class="container">
             <h5>Subir Acta de Escrutinio</h5>
             <div class="mb-3 row">
@@ -34,19 +36,38 @@
                     <input type="text" class="form-control" id="inputActa" placeholder="Ingrese número de acta">
                 </div>
             </div>
+            
             <div class="mb-3 row">
                 <label for="inputImgActa" class="col-form-label">Subir Acta (Imagen)</label>
                 <div class="">
                     <input class="form-control" id="inputImgActa" type="file" accept="image/*">
                 </div>
-            </div> 
-        </div>
-        <br>
-        <div class="container">
-            <label class="row justify-content-center">Estado del procesamiento</label> 
-            <div class="alert alert-info" id="avisos">Esperando para procesar...</div>
-        </div>
-    </div><br>
+            </div>
+    
+            <!-- <div class="mb-3 row">
+                <div class="col-sm-10">
+                    <button class="btn btn-primary" id="tomarFoto">Tomar Fotografía</button>
+                </div>
+            </div>
+    
+            <div class="mb-3 row camera">
+                <video id="video" autoplay style="max-height: 650px; max-width: 500px; object-fit: cover; width: 500px; height: 650px;"></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+            
+            <div class="mb-3 row">
+                <button class="btn btn-success btn-sm" id="guardarFoto" style="max-width: 150px; display: none;">Guardar Fotografía</button>
+                <button class="btn btn-warning btn-sm" id="reiniciar" style="max-width: 150px; display: none;">Reiniciar</button>
+            </div> -->
+    
+            <br>
+            <div class="container">
+                <label class="row justify-content-center">Estado del procesamiento</label> 
+                <div class="alert alert-info" id="avisos">Esperando para procesar...</div>
+            </div>
+        </div><br>
+    </div>
+    
     
     <div class="Resultados">
         <div class="container">
@@ -83,55 +104,54 @@
         </div>
     </div>
 
-    <script src="prueba2.js"></script>
-
+    <!-- Script principal para manejar la lógica -->
     <script>
-        // Función para mostrar resultados en el modal
-        function mostrarResultadosCabeceraYTablas(cabecera, tablas) {
-            const resultadoContenido = document.getElementById('resultadoContenido');
-            resultadoContenido.innerHTML = `
-                <h6>Cabecera:</h6>
-                <pre>${JSON.stringify(cabecera, null, 2)}</pre>
-                <h6>Tablas:</h6>
-                ${tablas.map(tabla => `
-                    <h6>Tabla:</h6>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>${tabla.map(celda => `<th>${celda}</th>`).join('')}</tr>
-                        </thead>
-                        <tbody>
-                            <tr>${tabla.map(celda => `<td>${celda}</td>`).join('')}</tr>
-                        </tbody>
-                    </table>
-                `).join('')}
-            `;
-            // Mostrar el modal
-            const modal = new bootstrap.Modal(document.getElementById('resultadoModal'));
-            modal.show();
-        }
 
-        document.getElementById('procesarActa').addEventListener('click', () => {
-            // Aquí iría el código para procesar el acta y obtener los resultados
-            // Supongamos que ya tienes los resultados en variables `cabecera` y `tablas`
-            const cabecera = {
-                "CANTON": "QUITO",
-                "JUNTAN": "001 FEMENINO",
-                "PARROQUIA": "TUMBACO",
-                "ZONA": "TUMBACO",
-                "PROVINCIA": "PICHINCHA",
-                "CONTROL N": "12345678",
-                "CIRCUNSCRIPCION": "CIRCUNSCRIPCIÓN RURAL", 
-                "título": "ELECCIONES SECCIONALES Y CPCCS 2023"
-            };
-            const tablas = [
-                ["Columna1", "Columna2", "Columna3"],
-                ["Datos1", "Datos2", "Datos3"]
-            ];
+        $(document).ready(function () {
+            $('#procesarActa').click(async function () {
+                let numeroActa = $('#inputActa').val();
+                let archivoActa = $('#inputImgActa')[0].files[0];  
 
-            mostrarResultadosCabeceraYTablas(cabecera, tablas);
+                if (!numeroActa || !archivoActa) {
+                    alert("Por favor, ingrese el número de acta y suba una imagen.");
+                    return;
+                }
+
+                let formData = new FormData();
+                formData.append('numeroActa', numeroActa);
+                formData.append('archivoActa', archivoActa);
+
+                try {
+                    // Mostrar estado
+                    $('#avisos').text("Procesando acta...");
+
+                    // Llamar al backend
+                    let response = await fetch('/procesar-acta', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let result = await response.json();
+
+                    if (response.ok) {
+                        $('#resultadoContenido').html(`
+                            <h5>Formularios</h5>
+                            <pre>${JSON.stringify(result.forms, null, 2)}</pre>
+                            <h5>Tablas</h5>
+                            <pre>${JSON.stringify(result.tables, null, 2)}</pre>
+                        `);
+                        $('#resultadoModal').modal('show');
+                    } else {
+                        alert(result.error || "Error al procesar el acta.");
+                    }
+                } catch (err) {
+                    alert("Error en la solicitud: " + err.message);
+                } finally {
+                    $('#avisos').text("Esperando para procesar...");
+                }
+            });
         });
     </script>
-
-</body>
-
+    <!-- <script src="control_camara.js"></script> -->
+</body> 
 </html>
