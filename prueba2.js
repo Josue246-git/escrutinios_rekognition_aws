@@ -17,10 +17,14 @@ const params = {
 // Función para optimizar la extracción de los datos del formulario
 const analyzeDocument = async () => {
     try {
+        
         const data = await client.send(new AnalyzeDocumentCommand(params));
+        const blockMap = {};
+        let forms = {};
+        let tables = [];
+
 
         // Mapeo para los bloques detectados por Textract
-        const blockMap = {};
         data.Blocks.forEach(block => {
             blockMap[block.Id] = block;
         });
@@ -38,8 +42,6 @@ const analyzeDocument = async () => {
         };
 
         // Filtrado de datos para formularios esenciales
-        let forms = {};
-
         // Lista de campos esenciales de cabecera a extraer con generalización
         const essentialFields = [
             "CANTON", "PROVINCIA", "ZONA", "PARROQUIA", 
@@ -54,6 +56,7 @@ const analyzeDocument = async () => {
                 // Generalización para título y fecha
                 if (/ELECCIONES SECCIONALES Y CPCCS/.test(keyText)) {
                     let valueBlock = block.Relationships.find(rel => rel.Type === 'VALUE');
+
                     let year = '';
                     if (valueBlock) {
                         year = valueBlock.Ids.map(id => getText(blockMap[id])).join(' ').trim();
@@ -76,6 +79,7 @@ const analyzeDocument = async () => {
             if (block.BlockType === 'LINE') {
                 const lineText = getText(block).trim();
                 const dateMatch = lineText.match(datePattern);
+
                 if (dateMatch) {
                     forms["fecha"] = dateMatch[0]; // Capturar la fecha
                 }
@@ -83,8 +87,6 @@ const analyzeDocument = async () => {
         });
 
         // Extracción de información de las tablas
-        let tables = [];
-
         data.Blocks.forEach(block => {
             if (block.BlockType === 'TABLE') {
                 const table = {};
@@ -110,19 +112,22 @@ const analyzeDocument = async () => {
 
                 // Añadir las filas de la tabla al objeto de la tabla
                 table.rows = tableRows;
-                tables.push(table);
+                tables.push(table); 
             }
         });
 
         // Mostrar información de las tablas
         console.log("Tablas:", JSON.stringify(tables, null, 2));
         // Mostrar los resultados optimizados del formulario
-        console.log("Formulario Optimizado:", JSON.stringify(forms, null, 2));
+        console.log("Formulario :", JSON.stringify(forms, null, 2));
  
 
     } catch (err) {
         console.error("Error al analizar el documento: ", err);
     }
+
+    return { tables, forms };
+    
 };
 
 // Ejecutar la función principal

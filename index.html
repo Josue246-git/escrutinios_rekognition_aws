@@ -13,51 +13,124 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container indicaciones">
         <h5>Pasos para procesar acta de escrutinio</h5>
         <ol>
             <li>Ingresar el número de acta.</li>
-            <li>Subir el archivo del acta en formato imagen.</li>
+            <li>Subir el archivo del acta en formato (jpg o png), o tomar una fotografía.</li>
+            <ul><li>La fotografía debe ser clara, legible y que se pueda observar todos los datos relevantes.</li></ul>
+            <ul><li>De otra manera deberá volver a tomar la fotografía hasta que se cumpla el punto anterior.</li></ul>
             <li>Dar clic en "Procesar Acta" para extraer los datos.</li>
         </ol>
     </div>
-
+    <br>
     <!-- Sección de carga de acta -->
-    <div id="seccion6" class="container">
-        <h5>Subir Acta de Escrutinio</h5>
-        <div class="mb-3 row">
-            <label for="inputActa" class="col-sm-2 col-form-label">Número de Acta:</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" id="inputActa" placeholder="Ingrese número de acta">
+    <div class="container Procesamiento">
+        <div id="seccion6" class="container">
+            <h5>Subir Acta de Escrutinio</h5>
+            <div class="mb-3 row">
+                <label for="inputActa" class="col-sm-2 col-form-label">Número de Acta:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputActa" placeholder="Ingrese número de acta">
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="inputImgActa" class="col-form-label">Subir Acta (Imagen)</label>
+                <div class="">
+                    <input class="form-control" id="inputImgActa" type="file" accept="image/*">
+                </div>
+            </div> 
+        </div>
+        <br>
+        <div class="container">
+            <label class="row justify-content-center">Estado del procesamiento</label> 
+            <div class="alert alert-info" id="avisos">Esperando para procesar...</div>
+        </div>
+    </div><br>
+    
+    <div class="Resultados">
+        <div class="container">
+            <div class="d-flex justify-content-center mb-3">
+                <button class='btn btn-primary' id="procesarActa">Procesar Acta</button>
+            </div>
+        </div> <br>
+
+        <div class="container">
+            <h5>Resultados del Acta Procesada</h5>
+            <div id="resultadoAnalisis">
+                <!-- Aquí se mostrará el resultado del análisis de la imagen --> 
             </div>
         </div>
-        <div class="mb-3 row">
-            <label for="inputImgActa" class="col-form-label">Subir Acta (Imagen)</label>
-            <div class="">
-                <input class="form-control" id="inputImgActa" type="file" accept="image/*">
+    </div>
+
+    <!-- Ventana Modal -->
+    <div class="modal fade" id="resultadoModal" tabindex="-1" aria-labelledby="resultadoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultadoModalLabel">Resultados del Análisis</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="resultadoContenido">
+                        <!-- Resultados se llenarán aquí -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <label class="row justify-content-center">Estado del procesamiento</label>
-        <div class="alert alert-info" id="avisos">Esperando para procesar...</div>
-    </div>
-
-    <div class="container">
-        <h5>Resultados del Acta Procesada</h5>
-        <div id="resultadoAnalisis">
-            <!-- Aquí se mostrará el resultado del análisis de la imagen -->
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="d-flex justify-content-center mb-3">
-            <button class='btn btn-primary' id="procesarActa">Procesar Acta</button>
         </div>
     </div>
 
     <script src="prueba2.js"></script>
+
+    <script>
+        // Función para mostrar resultados en el modal
+        function mostrarResultadosCabeceraYTablas(cabecera, tablas) {
+            const resultadoContenido = document.getElementById('resultadoContenido');
+            resultadoContenido.innerHTML = `
+                <h6>Cabecera:</h6>
+                <pre>${JSON.stringify(cabecera, null, 2)}</pre>
+                <h6>Tablas:</h6>
+                ${tablas.map(tabla => `
+                    <h6>Tabla:</h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>${tabla.map(celda => `<th>${celda}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            <tr>${tabla.map(celda => `<td>${celda}</td>`).join('')}</tr>
+                        </tbody>
+                    </table>
+                `).join('')}
+            `;
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('resultadoModal'));
+            modal.show();
+        }
+
+        document.getElementById('procesarActa').addEventListener('click', () => {
+            // Aquí iría el código para procesar el acta y obtener los resultados
+            // Supongamos que ya tienes los resultados en variables `cabecera` y `tablas`
+            const cabecera = {
+                "CANTON": "QUITO",
+                "JUNTAN": "001 FEMENINO",
+                "PARROQUIA": "TUMBACO",
+                "ZONA": "TUMBACO",
+                "PROVINCIA": "PICHINCHA",
+                "CONTROL N": "12345678",
+                "CIRCUNSCRIPCION": "CIRCUNSCRIPCIÓN RURAL", 
+                "título": "ELECCIONES SECCIONALES Y CPCCS 2023"
+            };
+            const tablas = [
+                ["Columna1", "Columna2", "Columna3"],
+                ["Datos1", "Datos2", "Datos3"]
+            ];
+
+            mostrarResultadosCabeceraYTablas(cabecera, tablas);
+        });
+    </script>
 
 </body>
 
